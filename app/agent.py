@@ -4,6 +4,7 @@ from langchain.messages import SystemMessage
 from langchain.agents import create_agent
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
 from app.tools import check_currency_rate, retrive_from_vector_db
 from dotenv import load_dotenv
 
@@ -11,10 +12,11 @@ sys.path.append("..")
 
 load_dotenv()
 
-openai_api_key = os.getenv("OPENAI_API_KEY")
-llm = ChatOpenAI(model="gpt-5-mini", temperature=0.5, api_key=openai_api_key)
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+llm = ChatOpenAI(model="gpt-5-mini", temperature=0.5, api_key=OPENAI_API_KEY)
+llm_2 = ChatOllama(model="llama3.2:3b", temperature=0.5)
+MODELS = {"openai": llm, "ollama": llm_2}
 checkpointer = InMemorySaver()
-
 system_msg = SystemMessage(""" SYSTEM PROMPT FOR NEXUS BANK S.A. VIRTUAL ASSISTANT
 
 1. ROLE AND PERSONA
@@ -76,9 +78,9 @@ Response Formulation: Formulate a polite response detailing the 15.00 PLN ATM fe
 and the current NBP rate that will be used for the conversion, ensuring complete transparency. """)
 
 
-def build_agent():
+def build_agent(model=None):
     agent = create_agent(
-        model=llm,
+        model=model or llm,
         tools=[check_currency_rate, retrive_from_vector_db],
         system_prompt=system_msg,
         checkpointer=checkpointer,
