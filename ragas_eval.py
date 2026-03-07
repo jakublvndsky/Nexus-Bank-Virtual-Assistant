@@ -4,17 +4,21 @@ import asyncio
 from langchain_openai import ChatOpenAI
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
-from app import get_vector_store, build_agent, initialize_vector_db
+from app import build_agent, initialize_vector_db
 from ragas import EvaluationDataset
 from ragas.llms import llm_factory
-from ragas.metrics.collections import Faithfulness, FactualCorrectness, ContextRecall
+from ragas.metrics.collections import (
+    Faithfulness,
+    FactualCorrectness,
+    ContextRecall,
+    ContextPrecision,
+)
 from ragas.run_config import RunConfig
 
 load_dotenv()
 
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
-initialize_vector_db()
-vector_store = get_vector_store()
+vector_store = initialize_vector_db()
 agent = build_agent()
 llm = ChatOpenAI(api_key=OPENAI_API_KEY)
 
@@ -83,10 +87,10 @@ def process_query(query):
     return result, relevant_docs
 
 
-process_query("What document says about fees on premium account?")
+process_query("What document says about fees?")
 
 ### RAG Evaluation
-llm_2 = AsyncOpenAI(api_key=OPENAI_API_KEY)
+llm_2 = AsyncOpenAI(api_key=OPENAI_API_KEY, max_retries=2)
 results = []
 
 for _, row in df.iterrows():
@@ -105,7 +109,7 @@ for _, row in df.iterrows():
     )
 
 evaluation_dataset = EvaluationDataset.from_list(results)
-evaluator_llm = llm_factory(model="gpt-5-mini", client=llm_2)
+evaluator_llm = llm_factory(model="gpt-5-mini", client=llm_2, max_tokens=8192)
 
 run_config = RunConfig(timeout=120, max_retries=3, max_workers=3, log_tenacity=True)
 
@@ -113,11 +117,12 @@ run_config = RunConfig(timeout=120, max_retries=3, max_workers=3, log_tenacity=T
 faithfulness_score = Faithfulness(llm=evaluator_llm)
 factual_correctness = FactualCorrectness(llm=evaluator_llm)
 context_recall = ContextRecall(llm=evaluator_llm)
+context_precision = ContextPrecision(llm=evaluator_llm)
 
 
 async def evaluation():
     final_score = []
-    for result in results:
+    for i, result in enumerate(results):
         print(f"=== Starting faithfulness eval for {result['user_input']} ===")
         user_input = result["user_input"]
         response = result["response"]
@@ -127,14 +132,14 @@ async def evaluation():
             response=response,
             retrieved_contexts=retrieved_contexts,
         )
-        final_score.append({"faithfulness": score.value})
-    for result in results:
+        final_score.append({f"faithfulness_{i}": score.value})
+    for i, result in enumerate(results):
         print(f"=== Starting factual correctness eval for {result['user_input']} ===")
         response = result["response"]
         reference = result["reference"]
         score = await factual_correctness.ascore(response=response, reference=reference)
-        final_score.append({"factual_correctness": score.value})
-    for result in results:
+        final_score.append({f"factual_correctness_{i}": score.value})
+    for i, result in enumerate(results):
         print(f"=== Starting context recall eval for {result['user_input']} ===")
         user_input = result["user_input"]
         reference = result["reference"]
@@ -144,7 +149,18 @@ async def evaluation():
             reference=reference,
             retrieved_contexts=retrieved_contexts,
         )
-        final_score.append({"context_recall": score.value})
+        final_score.append({f"context_recall_{i}": score.value})
+    for i, result in enumerate(results):
+        print(f"=== Starting context precision eval for {result['user_input']} ===")
+        user_input = result["user_input"]
+        reference = result["reference"]
+        retrieved_contexts = result["retrived_contexts"]
+        score = await context_precision.ascore(
+            user_input=user_input,
+            reference=reference,
+            retrieved_contexts=retrieved_contexts,
+        )
+        final_score.append({f"context_precision_{i}": score.value})
     return final_score
 
 

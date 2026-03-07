@@ -41,4 +41,4 @@ def initialize_vector_db():
     )
     all_splits = text_split.split_documents(docs)
     vector_store.add_documents(all_splits)
-    return "Documents stored in vector index"
+    return vector_store
