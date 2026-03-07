@@ -66,7 +66,7 @@ flowchart LR
 | **Vector DB** | Pinecone (index `codecademy-assesment`, ServerlessSpec) |
 | **Framework** | LangChain, LangGraph (agent + checkpointer), LangChain-OpenAI, LangChain-Ollama, LangChain-Pinecone |
 | **App** | Python 3, Streamlit (web), PyPDFLoader, RecursiveCharacterTextSplitter |
-| **Evaluation** | RAGAS (Faithfulness, Factual Correctness, Context Recall) |
+| **Evaluation** | RAGAS (Faithfulness, Factual Correctness, Context Recall, Context Precision) |
 | **Environment** | python-dotenv; NBP API (no key required) |
 
 ---
@@ -123,6 +123,16 @@ streamlit run streamlit_app.py
 Open the URL shown in the terminal (e.g. http://localhost:8501). You can switch between OpenAI and Ollama in the sidebar.
 
 On first run, the PDF is loaded, chunked, embedded, and uploaded to Pinecone; this may take a short time.
+
+**RAG evaluation (RAGAS):**
+
+Run the RAGAS evaluation script (Faithfulness, Factual Correctness, Context Recall, Context Precision) with:
+
+```bash
+python ragas_eval.py
+```
+
+Ensure `.env` with `OPENAI_API_KEY` and `PINECONE_API_KEY` is set; the script builds the evaluation dataset from the predefined queries, runs the agent, and prints the scores.
 
 ---
 

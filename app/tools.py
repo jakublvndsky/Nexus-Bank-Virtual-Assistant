@@ -25,6 +25,9 @@ def check_currency_rate(currency_code: str) -> dict:
         raise Exception(f"Invalid service status, specifically: {r.status_code}")
 
 
+vector_store = get_vector_store()
+
+
 @tool
 def retrive_from_vector_db(query: str):
     """
@@ -33,6 +36,5 @@ def retrive_from_vector_db(query: str):
     Use this tool when you want to retrieve information, extracts, rules, policies, or details
     about the services and terms offered by Nexus Bank, based on text queries.
     """
-    vector_store = get_vector_store()
     search_sim = vector_store.similarity_search(query=query, k=3)
     return search_sim

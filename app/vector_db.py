@@ -17,18 +17,18 @@ pc = Pinecone(PINECONE_API_KEY)
 def get_vector_store():
     try:
         index = pc.Index("codecademy-assesment")
-        print("==== Znalazłem indeks ====")
+        print("==== Found index ====")
         return PineconeVectorStore(index=index, embedding=embeddings)
     except Exception as e:
-        print(f"Nie udało się połączyć do indeksu w bazie wektorowej: {e}")
-        print("==== Tworzę nowy indeks w bazie wektorowej ====")
+        print(f"Failed to connect to vector DB index: {e}")
+        print("==== Creating new vector DB index ====")
         index = pc.create_index(
             name="codecademy-assesment",
             dimension=1536,
             spec=ServerlessSpec(cloud="aws", region="us-east-1"),
             metric="cosine",
         )
-        print("Utworzyłem indeks")
+        print("Index created")
         return PineconeVectorStore(index=index, embedding=embeddings)
 
 

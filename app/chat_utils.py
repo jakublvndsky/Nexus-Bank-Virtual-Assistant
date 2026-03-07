@@ -5,7 +5,7 @@ config = {"configurable": {"thread_id": "1"}}
 
 def run_agent_turn(agent, text: str):
     """
-    Streamuje kolejne fragmenty treści odpowiedzi asystenta (generator stringów).
+    Streams successive chunks of the assistant response (string generator).
     """
     prompt = HumanMessage(text)
     for event in agent.stream(

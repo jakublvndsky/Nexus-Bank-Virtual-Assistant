@@ -30,13 +30,13 @@ def main():
     with st.sidebar:
         st.subheader("Model")
         selected_model_key = st.selectbox(
-            "Wybierz model",
+            "Select model",
             options=list(MODELS.keys()),
             format_func=lambda k: MODEL_LABELS[k],
             key="model_choice",
         )
         if selected_model_key == "ollama":
-            st.caption("Wymaga uruchomionej Ollama z modelem llama3.2:3b.")
+            st.caption("Requires Ollama running with model llama3.2:3b.")
 
     initialize_resources(selected_model_key)
 
