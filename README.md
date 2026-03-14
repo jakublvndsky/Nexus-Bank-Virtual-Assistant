@@ -136,6 +136,52 @@ Ensure `.env` with `OPENAI_API_KEY` and `PINECONE_API_KEY` is set; the script bu
 
 ---
 
+## Docker
+
+You can run the app in a container. Ensure you have [Docker](https://docs.docker.com/get-docker/) installed.
+
+### Build the image
+
+From the project root:
+
+```bash
+docker build -t nexus-assistant .
+```
+
+### Run the container
+
+Pass your environment variables via an env file (do not commit `.env`):
+
+```bash
+docker run -p 8501:8501 --env-file .env nexus-assistant
+```
+
+Open http://localhost:8501 for the Streamlit UI. Use `Ctrl+C` to stop the container.
+
+The Dockerfile uses `python:3.12-slim`, installs dependencies from `requirements.txt`, and runs Streamlit on port 8501 with `--server.address=0.0.0.0` so the app is reachable from the host. A `.dockerignore` file excludes `.venv`, `.env`, `__pycache__`, and `.git` from the build context.
+
+---
+
+## Deploy on Railway
+
+This project can be deployed on [Railway](https://railway.app/) with minimal configuration.
+
+1. **Create a Railway account** at [railway.app](https://railway.app) and install the GitHub integration if you want to deploy from a repository.
+
+2. **New Project → Deploy from GitHub repo** (or use Railway CLI). Select this repository and the branch to deploy. Railway will detect the Dockerfile and build the image.
+
+3. **Set environment variables** in the Railway dashboard: **Project → Variables** (or **Service → Variables**). Add:
+   - `OPENAI_API_KEY` — your OpenAI API key
+   - `PINECONE_API_KEY` — your Pinecone API key
+
+4. **Deploy.** Railway will build the container, run it, and assign a public URL (e.g. `https://your-app.up.railway.app`). The Streamlit app will be available at that URL.
+
+5. **Optional:** In **Settings**, you can set a custom domain or configure the public port if needed (default is 8501).
+
+No credit card is required for the free tier; usage limits apply. See [Railway docs](https://docs.railway.app/) for more details.
+
+---
+
 ## Project Structure
 
 ```
@@ -151,6 +197,8 @@ Assesment/
 │   └── vector_db.py     # PDF loader, splitter, Pinecone init
 ├── data/
 │   └── Nexus Bank Terms and Conditions.pdf
+├── Dockerfile
+├── .dockerignore
 ├── requirements.txt
 └── README.md
 ```
