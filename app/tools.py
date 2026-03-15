@@ -1,6 +1,6 @@
 import requests
 from langchain.tools import tool
-from app.vector_db import get_vector_store
+from app.vector_db import initialize_vector_db
 
 
 @tool(
@@ -16,7 +16,8 @@ def check_currency_rate(currency_code: str) -> dict:
     """
 
     r = requests.get(
-        f"http://api.nbp.pl/api/exchangerates/rates/A/{currency_code}/?format=json"
+        f"http://api.nbp.pl/api/exchangerates/rates/A/{currency_code}/?format=json",
+        timeout=120,
     )
     if r.status_code == 200:
         response = r.json()
@@ -25,7 +26,7 @@ def check_currency_rate(currency_code: str) -> dict:
         raise Exception(f"Invalid service status, specifically: {r.status_code}")
 
 
-vector_store = get_vector_store()
+vector_store = initialize_vector_db()
 
 
 @tool
