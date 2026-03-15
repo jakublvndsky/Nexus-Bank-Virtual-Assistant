@@ -18,7 +18,9 @@ A RAG-powered conversational AI for **Nexus Bank S.A.** (fictional Polish bank).
 - **Compliant behaviour** — No financial advice; no handling of passwords/PINs; no access to account balances; suggests contacting support when appropriate.
 - **Dual interface** — Terminal chat (`main.py`) and web UI (Streamlit) with streamed replies in the user’s language.
 - **Model choice (Streamlit)** — OpenAI GPT-5 Mini or Ollama (Llama 3.2 3B).
-- **RAG evaluation** — Optional RAGAS-based evaluation (Faithfulness, Factual Correctness, Context Recall) in `ragas_eval.py`.
+- **Per-session conversations** — Each Streamlit session and each CLI run has its own conversation thread (isolated history and LangGraph checkpointer state).
+- **Optional observability (Langfuse)** — When `LANGFUSE_SECRET_KEY` and `LANGFUSE_PUBLIC_KEY` are set, all agent runs (Streamlit and CLI) are traced to Langfuse with session grouping for debugging and analytics.
+- **RAG evaluation** — Optional RAGAS-based evaluation (Faithfulness, Factual Correctness, Context Recall, Context Precision) in `ragas_eval.py`.
 
 ---
 
@@ -66,6 +68,7 @@ flowchart LR
 | **Vector DB** | Pinecone (index `codecademy-assesment`, ServerlessSpec) |
 | **Framework** | LangChain, LangGraph (agent + checkpointer), LangChain-OpenAI, LangChain-Ollama, LangChain-Pinecone |
 | **App** | Python 3, Streamlit (web), PyPDFLoader, RecursiveCharacterTextSplitter |
+| **Observability** | Langfuse (optional; tracing, sessions, cost/latency when API keys set) |
 | **Evaluation** | RAGAS (Faithfulness, Factual Correctness, Context Recall, Context Precision) |
 | **Environment** | python-dotenv; NBP API (no key required) |
 
@@ -92,17 +95,21 @@ pip install -r requirements.txt
 
 ### 3. Environment variables
 
-Create a `.env` file in the project root:
+Copy `.env.example` to `.env` and fill in the values:
 
-```env
-OPENAI_API_KEY=your_openai_api_key_here
-PINECONE_API_KEY=your_pinecone_api_key_here
+```bash
+cp .env.example .env
 ```
 
-- **OPENAI_API_KEY** — Required for the chat model and embeddings.
-- **PINECONE_API_KEY** — Required for RAG; the app uses or creates the index `codecademy-assesment` on first run.
+Required:
 
-Optional: to use **Ollama** in the Streamlit UI, run Ollama locally with the model `llama3.2:3b`.
+- **OPENAI_API_KEY** — For the chat model and embeddings.
+- **PINECONE_API_KEY** — For RAG; the app uses or creates the index `codecademy-assesment` on first run.
+
+Optional:
+
+- **Langfuse** — For observability (traces, sessions, token/cost). Set `LANGFUSE_SECRET_KEY`, `LANGFUSE_PUBLIC_KEY`, and `LANGFUSE_HOST` (e.g. `https://cloud.langfuse.com` for EU or `https://us.cloud.langfuse.com` for US). Get keys in Langfuse → Settings → API Keys. If unset, the app runs without tracing.
+- **Ollama** — To use Ollama in the Streamlit UI, run Ollama locally with the model `llama3.2:3b`.
 
 ### 4. Run locally
 
@@ -123,6 +130,9 @@ streamlit run streamlit_app.py
 Open the URL shown in the terminal (e.g. http://localhost:8501). You can switch between OpenAI and Ollama in the sidebar.
 
 On first run, the PDF is loaded, chunked, embedded, and uploaded to Pinecone; this may take a short time.
+
+**Observability (Langfuse):**  
+If `LANGFUSE_SECRET_KEY` and `LANGFUSE_PUBLIC_KEY` are set in `.env`, every agent run (Streamlit and CLI) is traced to your Langfuse project. In Langfuse you can inspect traces, sessions (grouped by conversation), token usage, and latency. No code changes are required; tracing is disabled when the keys are missing.
 
 **RAG evaluation (RAGAS):**
 
@@ -172,9 +182,10 @@ This project can be deployed on [Railway](https://railway.app/) with minimal con
 
 3. **Set environment variables** in the Railway dashboard: **Project → Variables** (or **Service → Variables**). Add:
    - `OPENAI_API_KEY` — your OpenAI API key
-   - `PINECONE_API_KEY` — your Pinecone API key
+   - `PINECONE_API_KEY` — your Pinecone API key  
+   Optionally, for **Langfuse** tracing: `LANGFUSE_SECRET_KEY`, `LANGFUSE_PUBLIC_KEY`, and `LANGFUSE_HOST` (e.g. `https://cloud.langfuse.com`).
 
-4. **Deploy.** Railway will build the container, run it, and assign a public URL (e.g. `https://your-app.up.railway.app`). The Streamlit app will be available at that URL.
+4. **Deploy.** Railway will build the container, run it, and assign a public URL (e.g. `https://nexus-bank-virtual-assistant-production.up.railway.app/`). The Streamlit app will be available at that URL.
 
 5. **Optional:** In **Settings**, you can set a custom domain or configure the public port if needed (default is 8501).
 
@@ -186,17 +197,19 @@ No credit card is required for the free tier; usage limits apply. See [Railway d
 
 ```
 Assesment/
-├── main.py              # Entry point: terminal chat loop
+├── main.py              # Entry point: terminal chat loop (with Langfuse flush on exit)
 ├── streamlit_app.py     # Streamlit web UI
 ├── ragas_eval.py        # RAGAS evaluation (Faithfulness, etc.)
 ├── app/
 │   ├── __init__.py
 │   ├── agent.py         # Agent definition, system prompt, LLM(s)
-│   ├── chat_utils.py    # Streaming response helper
-│   ├── tools.py         # currency_exchange, retrive_from_vector_db
+│   ├── chat_utils.py    # Streaming response helper; wires Langfuse callbacks when configured
+│   ├── langfuse_config.py  # Optional Langfuse callback and metadata; flush() for CLI
+│   ├── tools.py         # check_currency_rate, retrieve_from_vector_db
 │   └── vector_db.py     # PDF loader, splitter, Pinecone init
 ├── data/
 │   └── Nexus Bank Terms and Conditions.pdf
+├── .env.example         # Template for OPENAI_API_KEY, PINECONE_API_KEY, optional Langfuse
 ├── Dockerfile
 ├── .dockerignore
 ├── requirements.txt
@@ -294,3 +307,4 @@ Exact amounts may vary slightly depending on the time of execution. I am an info
 - [Pinecone](https://docs.pinecone.io/)
 - [NBP API](http://api.nbp.pl/) — National Bank of Poland exchange rates (no API key).
 - [RAGAS](https://docs.ragas.io/) — Evaluation for RAG pipelines.
+- [Langfuse](https://langfuse.com/docs) — Observability and tracing for LLM applications.
