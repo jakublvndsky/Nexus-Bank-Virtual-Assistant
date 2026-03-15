@@ -13,8 +13,10 @@ sys.path.append("..")
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-llm = ChatOpenAI(model="gpt-5-mini", temperature=0.5, api_key=OPENAI_API_KEY)
-llm_2 = ChatOllama(model="llama3.2:3b", temperature=0.5)
+llm = ChatOpenAI(
+    model="gpt-5-mini", temperature=0.5, api_key=OPENAI_API_KEY, timeout=120
+)
+llm_2 = ChatOllama(model="llama3.2:3b", temperature=0.5, timeout=120)
 MODELS = {"openai": llm, "ollama": llm_2}
 checkpointer = InMemorySaver()
 system_msg = SystemMessage(""" SYSTEM PROMPT FOR NEXUS BANK S.A. VIRTUAL ASSISTANT

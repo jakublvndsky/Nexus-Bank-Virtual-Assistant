@@ -10,7 +10,9 @@ load_dotenv()
 
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 PINECONE_API_KEY = os.environ["PINECONE_API_KEY"]
-embeddings = OpenAIEmbeddings(api_key=OPENAI_API_KEY, model="text-embedding-3-small")
+embeddings = OpenAIEmbeddings(
+    api_key=OPENAI_API_KEY, model="text-embedding-3-small", timeout=120
+)
 pc = Pinecone(PINECONE_API_KEY)
 
 
