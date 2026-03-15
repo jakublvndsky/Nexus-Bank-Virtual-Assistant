@@ -1,5 +1,5 @@
 import streamlit as st
-
+import uuid
 from app import build_agent, MODELS, initialize_vector_db
 from app.chat_utils import run_agent_turn
 
@@ -11,6 +11,9 @@ def initialize_resources(selected_model_key: str):
     Initialize vector database and agent once per Streamlit session.
     Rebuilds agent when selected model changes.
     """
+    if "thread_id" not in st.session_state:
+        st.session_state["thread_id"] = str(uuid.uuid4())
+
     if "vector_db_initialized" not in st.session_state:
         initialize_vector_db()
         st.session_state["vector_db_initialized"] = True
@@ -60,7 +63,9 @@ def main():
         # Run agent turn (stream into assistant bubble, then save full answer to history)
         agent = st.session_state["agent"]
         with st.chat_message("assistant"):
-            full_answer = st.write_stream(run_agent_turn(agent, user_input))
+            full_answer = st.write_stream(
+                run_agent_turn(agent, user_input, st.session_state["thread_id"])
+            )
         st.session_state["messages"].append(
             {"role": "assistant", "content": full_answer}
         )

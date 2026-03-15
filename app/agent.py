@@ -5,7 +5,7 @@ from langchain.agents import create_agent
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain_openai import ChatOpenAI
 from langchain_ollama import ChatOllama
-from app.tools import check_currency_rate, retrive_from_vector_db
+from app.tools import check_currency_rate, retrieve_from_vector_db
 from dotenv import load_dotenv
 
 sys.path.append("..")
@@ -83,7 +83,7 @@ and the current NBP rate that will be used for the conversion, ensuring complete
 def build_agent(model=None):
     agent = create_agent(
         model=model or llm,
-        tools=[check_currency_rate, retrive_from_vector_db],
+        tools=[check_currency_rate, retrieve_from_vector_db],
         system_prompt=system_msg,
         checkpointer=checkpointer,
     )

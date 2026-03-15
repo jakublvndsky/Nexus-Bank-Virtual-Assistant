@@ -29,7 +29,7 @@ vector_store = get_vector_store()
 
 
 @tool
-def retrive_from_vector_db(query: str):
+def retrieve_from_vector_db(query: str):
     """
     Searches a vector database containing the file @data/Nexus Bank Terms and Conditions.pdf,
     which is a PDF document about the fictional Nexus Bank.

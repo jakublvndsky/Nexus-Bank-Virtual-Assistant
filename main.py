@@ -1,8 +1,12 @@
+import uuid
+
 from app.agent import build_agent
-from app.vector_db import initialize_vector_db
 from app.chat_utils import run_agent_turn
+from app.langfuse_config import flush
+from app.vector_db import initialize_vector_db
 
 initialize_vector_db()
+thread_id = str(uuid.uuid4())
 
 
 def chat_agent():
@@ -21,10 +25,13 @@ def chat_agent():
         if text.lower() in {"exit", "q", "quit"}:
             break
 
-        for answer in run_agent_turn(agent, text):
+        for answer in run_agent_turn(agent, text, thread_id):
             print(answer, end="", flush=True)
         print()
 
 
 if __name__ == "__main__":
-    chat_agent()
+    try:
+        chat_agent()
+    finally:
+        flush()
