@@ -5,14 +5,14 @@ from app.chat_utils import run_agent_turn
 from app.langfuse_config import flush
 from app.vector_db import initialize_vector_db
 
-initialize_vector_db()
 thread_id = str(uuid.uuid4())
 
 
 def chat_agent():
-    agent = build_agent()
+    vector_store = initialize_vector_db()
+    agent = build_agent(vector_store=vector_store)
     print("=== Nexus Assistant ===")
-    print("Hello I am Nexus assistant how can I help you today?")
+    print("Hello I am Nexus Assistant how can I help you today?")
     while True:
         try:
             text = input("")

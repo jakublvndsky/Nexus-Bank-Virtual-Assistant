@@ -19,7 +19,7 @@ load_dotenv()
 
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 vector_store = initialize_vector_db()
-agent = build_agent()
+agent = build_agent(vector_store=vector_store)
 llm = ChatOpenAI(api_key=OPENAI_API_KEY)
 
 
@@ -38,7 +38,7 @@ def get_answer(question: str):
     {question}
 
     Answer:
-     """
+    """
 
     response = llm.invoke(prompt)
 
@@ -78,12 +78,12 @@ queries = [
 
 df = pd.DataFrame(queries)
 
-retriver = vector_store.as_retriever()
+retriever = vector_store.as_retriever()
 
 
 def process_query(query):
     result = get_answer(query)
-    relevant_docs = retriver.invoke(query)
+    relevant_docs = retriever.invoke(query)
     return result, relevant_docs
 
 
@@ -104,7 +104,7 @@ for _, row in df.iterrows():
             "user_input": question,
             "reference": ground_truth,
             "response": answer,
-            "retrived_contexts": [relevant_docs[0].page_content],
+            "retrieved_contexts": [relevant_docs[0].page_content],
         }
     )
 
@@ -126,7 +126,7 @@ async def evaluation():
         print(f"=== Starting faithfulness eval for {result['user_input']} ===")
         user_input = result["user_input"]
         response = result["response"]
-        retrieved_contexts = result["retrived_contexts"]
+        retrieved_contexts = result["retrieved_contexts"]
         score = await faithfulness_score.ascore(
             user_input=user_input,
             response=response,
@@ -143,7 +143,7 @@ async def evaluation():
         print(f"=== Starting context recall eval for {result['user_input']} ===")
         user_input = result["user_input"]
         reference = result["reference"]
-        retrieved_contexts = result["retrived_contexts"]
+        retrieved_contexts = result["retrieved_contexts"]
         score = await context_recall.ascore(
             user_input=user_input,
             reference=reference,
@@ -154,7 +154,7 @@ async def evaluation():
         print(f"=== Starting context precision eval for {result['user_input']} ===")
         user_input = result["user_input"]
         reference = result["reference"]
-        retrieved_contexts = result["retrived_contexts"]
+        retrieved_contexts = result["retrieved_contexts"]
         score = await context_precision.ascore(
             user_input=user_input,
             reference=reference,

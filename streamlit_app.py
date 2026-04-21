@@ -14,15 +14,17 @@ def initialize_resources(selected_model_key: str):
     if "thread_id" not in st.session_state:
         st.session_state["thread_id"] = str(uuid.uuid4())
 
-    if "vector_db_initialized" not in st.session_state:
-        initialize_vector_db()
-        st.session_state["vector_db_initialized"] = True
+    if "vector_store" not in st.session_state:
+        st.session_state["vector_store"] = initialize_vector_db()
 
     if (
         "agent" not in st.session_state
         or st.session_state.get("model_key_for_agent") != selected_model_key
     ):
-        st.session_state["agent"] = build_agent(model=MODELS[selected_model_key])
+        st.session_state["agent"] = build_agent(
+            model=MODELS[selected_model_key],
+            vector_store=st.session_state["vector_store"],
+        )
         st.session_state["model_key_for_agent"] = selected_model_key
 
     if "messages" not in st.session_state:
