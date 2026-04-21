@@ -164,5 +164,6 @@ async def evaluation():
     return final_score
 
 
-result = asyncio.run(evaluation())
-print(result)
+if __name__ == "__main__":
+    result = asyncio.run(evaluation())
+    print(result)

@@ -8,6 +8,10 @@ from langchain_openai import OpenAIEmbeddings
 
 load_dotenv()
 
+if not os.environ.get("OPENAI_API_KEY"):
+    raise KeyError("OPENAI_API_KEY is not set")
+if not os.environ.get("PINECONE_API_KEY"):
+    raise KeyError("PINECONE_API_KEY is not set")
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 PINECONE_API_KEY = os.environ["PINECONE_API_KEY"]
 embeddings = OpenAIEmbeddings(

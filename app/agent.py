@@ -1,5 +1,4 @@
 import os
-import sys
 from langchain.messages import SystemMessage
 from langchain.agents import create_agent
 from langgraph.checkpoint.memory import InMemorySaver
@@ -8,11 +7,10 @@ from langchain_ollama import ChatOllama
 from app.tools import check_currency_rate, retrieve_from_vector_db
 from dotenv import load_dotenv
 
-sys.path.append("..")
 
 load_dotenv()
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 llm = ChatOpenAI(
     model="gpt-5-mini", temperature=0.5, api_key=OPENAI_API_KEY, timeout=120
 )

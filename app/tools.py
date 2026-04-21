@@ -16,7 +16,7 @@ def check_currency_rate(currency_code: str) -> dict:
     """
 
     r = requests.get(
-        f"http://api.nbp.pl/api/exchangerates/rates/A/{currency_code}/?format=json",
+        f"https://api.nbp.pl/api/exchangerates/rates/A/{currency_code}/?format=json",
         timeout=120,
     )
     if r.status_code == 200:
