@@ -2,6 +2,8 @@
 
 A RAG-powered conversational AI for **Nexus Bank S.A.** (fictional Polish bank). It answers retail clients’ questions about accounts, fees, interest rates, and currency exchange using the bank’s Terms and Conditions (PDF) and live NBP exchange rates.
 
+**Live app (Streamlit on Render):** [https://nexus-bank-virtual-assistant.onrender.com/](https://nexus-bank-virtual-assistant.onrender.com/)
+
 ---
 
 ## Motivation
@@ -21,6 +23,7 @@ A RAG-powered conversational AI for **Nexus Bank S.A.** (fictional Polish bank).
 - **Per-session conversations** — Each Streamlit session and each CLI run has its own conversation thread (isolated history and LangGraph checkpointer state).
 - **Optional observability (Langfuse)** — When `LANGFUSE_SECRET_KEY` and `LANGFUSE_PUBLIC_KEY` are set, all agent runs (Streamlit and CLI) are traced to Langfuse with session grouping for debugging and analytics.
 - **RAG evaluation** — Optional RAGAS-based evaluation (Faithfulness, Factual Correctness, Context Recall, Context Precision) in `ragas_eval.py`.
+- **Public demo** — Web UI hosted on [Render](https://render.com/) (see [Deploy on Render](#deploy-on-render)); the free tier may sleep after inactivity, so the first load after a pause can be slower.
 
 ---
 
@@ -172,24 +175,22 @@ The Dockerfile uses `python:3.12-slim`, installs dependencies from `requirements
 
 ---
 
-## Deploy on Railway
+## Deploy on Render
 
-This project can be deployed on [Railway](https://railway.app/) with minimal configuration.
+The public instance runs on [Render](https://render.com/): [https://nexus-bank-virtual-assistant.onrender.com/](https://nexus-bank-virtual-assistant.onrender.com/). To deploy this repo yourself:
 
-1. **Create a Railway account** at [railway.app](https://railway.app) and install the GitHub integration if you want to deploy from a repository.
+1. **Create a Render account** and connect your Git provider.
 
-2. **New Project → Deploy from GitHub repo** (or use Railway CLI). Select this repository and the branch to deploy. Railway will detect the Dockerfile and build the image.
+2. **New → Web Service**, select this repository and branch. Choose **Docker** as the environment so Render uses the project `Dockerfile` (Streamlit on port **8501**; ensure the service’s **port** in the Render dashboard matches what the container exposes, typically `8501`).
 
-3. **Set environment variables** in the Railway dashboard: **Project → Variables** (or **Service → Variables**). Add:
-   - `OPENAI_API_KEY` — your OpenAI API key
-   - `PINECONE_API_KEY` — your Pinecone API key  
-   Optionally, for **Langfuse** tracing: `LANGFUSE_SECRET_KEY`, `LANGFUSE_PUBLIC_KEY`, and `LANGFUSE_HOST` (e.g. `https://cloud.langfuse.com`).
+3. **Environment variables** — In the service **Environment** tab, add at least:
+   - `OPENAI_API_KEY` — OpenAI key for the chat model and embeddings
+   - `PINECONE_API_KEY` — Pinecone key for RAG  
+   Optional for **Langfuse** tracing: `LANGFUSE_SECRET_KEY`, `LANGFUSE_PUBLIC_KEY`, and `LANGFUSE_HOST` (e.g. `https://cloud.langfuse.com` for EU or `https://us.cloud.langfuse.com` for US).
 
-4. **Deploy.** Railway will build the container, run it, and assign a public URL (e.g. `https://nexus-bank-virtual-assistant-production.up.railway.app/`). The Streamlit app will be available at that URL.
+4. **Deploy.** After the build finishes, open the service URL. On the **free** tier, the instance may **spin down** when idle; the first request after sleep can take longer while the service wakes up.
 
-5. **Optional:** In **Settings**, you can set a custom domain or configure the public port if needed (default is 8501).
-
-No credit card is required for the free tier; usage limits apply. See [Railway docs](https://docs.railway.app/) for more details.
+See [Render docs: Docker](https://render.com/docs/docker) and [Web services](https://render.com/docs/web-services) for custom domains, scaling, and limits.
 
 ---
 
@@ -205,7 +206,7 @@ Assesment/
 │   ├── agent.py         # Agent definition, system prompt, LLM(s)
 │   ├── chat_utils.py    # Streaming response helper; wires Langfuse callbacks when configured
 │   ├── langfuse_config.py  # Optional Langfuse callback and metadata; flush() for CLI
-│   ├── tools.py         # check_currency_rate, retrieve_from_vector_db
+│   ├── tools.py         # check_currency_rate, make_retrieve_tool (RAG tool binding)
 │   └── vector_db.py     # PDF loader, splitter, Pinecone init
 ├── data/
 │   └── Nexus Bank Terms and Conditions.pdf
