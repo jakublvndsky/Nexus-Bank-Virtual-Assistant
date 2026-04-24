@@ -22,14 +22,14 @@ pc = Pinecone(PINECONE_API_KEY)
 
 def get_vector_store():
     try:
-        index = pc.Index("codecademy-assesment")
+        index = pc.Index("nexus-bank-terms-and-conditions")
         print("==== Found index ====")
         return index
     except Exception as e:
         print(f"Failed to connect to vector DB index: {e}")
         print("==== Creating new vector DB index ====")
         index = pc.create_index(
-            name="codecademy-assesment",
+            name="nexus-bank-terms-and-conditions",
             dimension=1536,
             spec=ServerlessSpec(cloud="aws", region="us-east-1"),
             metric="cosine",
